@@ -50,6 +50,7 @@ const app = express();
 //  CORS
 const allowedOrigins = [
   process.env.CLIENT_URL, 
+  'https://royal-electronics-git-master-abr13.vercel.app',
   'http://localhost:3000'
 ].filter(Boolean);
 
