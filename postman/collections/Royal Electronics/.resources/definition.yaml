@@ -1,0 +1,21 @@
+$kind: collection
+name: Royal Electronics
+variables:
+  - key: supabase_service_role_api_key_1bo7
+    secret: true
+    disabled: false
+  - key: json_web_token_0ik3
+    secret: true
+    disabled: false
+  - key: supabase_service_role_api_key_02su
+    secret: true
+    disabled: false
+  - key: supabase_service_role_api_key_0ukr
+    secret: true
+    disabled: false
+  - key: json_web_token_18xv
+    secret: true
+    disabled: false
+  - key: json_web_token_0ncq
+    secret: true
+    disabled: false

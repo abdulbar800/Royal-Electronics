@@ -1,0 +1,5 @@
+$kind: http-request
+name: create payment order
+url: ""
+method: GET
+order: 28000
