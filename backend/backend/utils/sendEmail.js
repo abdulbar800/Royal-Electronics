@@ -1,5 +1,3 @@
-const brevo = require('@getbrevo/brevo');
-
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const SENDER_EMAIL = process.env.SENDER_EMAIL;
 
@@ -15,22 +13,36 @@ if (!BREVO_API_KEY || !SENDER_EMAIL) {
     console.error('Please add BREVO_API_KEY aur SENDER_EMAIL to .env file');
 }
 
-const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
-
+// SDK ki jagah seedha Brevo ka REST API call kiya hai (native fetch se),
+// taaki kisi bhi SDK version mismatch ka jhanjhat na ho
 const sendEmail = async (to, subject, html) => {
     try {
-        const sendSmtpEmail = new brevo.SendSmtpEmail();
-        sendSmtpEmail.subject = subject;
-        sendSmtpEmail.htmlContent = html;
-        sendSmtpEmail.sender = { name: 'Royal Electronics', email: SENDER_EMAIL };
-        sendSmtpEmail.to = [{ email: to }];
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': BREVO_API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: { name: 'Royal Electronics', email: SENDER_EMAIL },
+                to: [{ email: to }],
+                subject: subject,
+                htmlContent: html
+            })
+        });
 
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log('Email sent:', data.body ? data.body.messageId : data.messageId);
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Email send failed:', JSON.stringify(data));
+            return false;
+        }
+
+        console.log('Email sent:', data.messageId);
         return true;
     } catch (error) {
-        console.error('Email send failed:', error.response ? JSON.stringify(error.response.body) : error.message);
+        console.error('Email send failed:', error.message);
         return false;
     }
 };
