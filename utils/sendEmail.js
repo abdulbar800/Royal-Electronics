@@ -1,40 +1,36 @@
-const { Resend } = require('resend');
+const brevo = require('@getbrevo/brevo');
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const SENDER_EMAIL = process.env.SENDER_EMAIL; // Brevo par jo email verify kiya hai wahi yahan daalo
 
 console.log('=================================');
-console.log('EMAIL CONFIGURATION (Resend)');
+console.log('EMAIL CONFIGURATION (Brevo)');
 console.log('=================================');
-console.log('RESEND_API_KEY:', RESEND_API_KEY ? 'SET' : 'MISSING');
+console.log('BREVO_API_KEY:', BREVO_API_KEY ? 'SET' : 'MISSING');
+console.log('SENDER_EMAIL:', SENDER_EMAIL ? 'SET' : 'MISSING');
 console.log('=================================');
 
-if (!RESEND_API_KEY) {
-    console.error('RESEND_API_KEY is missing in .env');
-    console.error('Please add RESEND_API_KEY to .env file');
+if (!BREVO_API_KEY || !SENDER_EMAIL) {
+    console.error('BREVO_API_KEY ya SENDER_EMAIL .env me missing hai');
+    console.error('Please add BREVO_API_KEY aur SENDER_EMAIL to .env file');
 }
 
-const resend = new Resend(RESEND_API_KEY);
-
-const FROM_EMAIL = 'Royal Electronics <onboarding@resend.dev>';
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
 
 const sendEmail = async (to, subject, html) => {
     try {
-        const { data, error } = await resend.emails.send({
-            from: FROM_EMAIL,
-            to,
-            subject,
-            html
-        });
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
+        sendSmtpEmail.subject = subject;
+        sendSmtpEmail.htmlContent = html;
+        sendSmtpEmail.sender = { name: 'Royal Electronics', email: SENDER_EMAIL };
+        sendSmtpEmail.to = [{ email: to }];
 
-        if (error) {
-            console.error('Email send failed:', error.message || error);
-            return false;
-        }
-
-        console.log('Email sent:', data.id);
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log('Email sent:', data.body ? data.body.messageId : data.messageId);
         return true;
     } catch (error) {
-        console.error('Email send failed:', error.message);
+        console.error('Email send failed:', error.response ? JSON.stringify(error.response.body) : error.message);
         return false;
     }
 };
