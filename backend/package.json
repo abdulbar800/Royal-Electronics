@@ -23,6 +23,7 @@
     "nodemailer": "^9.0.5",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.8",
+    "resend": "^6.25.0",
     "speakeasy": "^2.0.0",
     "xss": "^1.0.14"
   },
