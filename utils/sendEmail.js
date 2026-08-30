@@ -1,54 +1,37 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 console.log('=================================');
-console.log('EMAIL CONFIGURATION');
+console.log('EMAIL CONFIGURATION (Resend)');
 console.log('=================================');
-console.log('EMAIL_USER:', EMAIL_USER ? 'SET' : 'MISSING');
-console.log('EMAIL_PASS:', EMAIL_PASS ? 'SET' : 'MISSING');
+console.log('RESEND_API_KEY:', RESEND_API_KEY ? 'SET' : 'MISSING');
 console.log('=================================');
 
-// Check if credentials exist
-if (!EMAIL_USER || !EMAIL_PASS) {
-    console.error('EMAIL_USER or EMAIL_PASS is missing in .env');
-    console.error('Please add EMAIL_USER and EMAIL_PASS to .env file');
+if (!RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is missing in .env');
+    console.error('Please add RESEND_API_KEY to .env file');
 }
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for port 465, false for port 587
-    auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS
-    },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-    
-    family: 4
-});
+const resend = new Resend(RESEND_API_KEY);
 
-transporter.verify((error, success) => {
-    if (error) {
-        console.error('Email transporter error:', error.message);
-    } else {
-        console.log('Email server ready to send messages');
-    }
-});
+const FROM_EMAIL = 'Royal Electronics <onboarding@resend.dev>';
 
 const sendEmail = async (to, subject, html) => {
     try {
-        const info = await transporter.sendMail({
-            from: `"Royal Electronics" <${EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
             to,
             subject,
             html
         });
-        console.log('Email sent:', info.messageId);
+
+        if (error) {
+            console.error('Email send failed:', error.message || error);
+            return false;
+        }
+
+        console.log('Email sent:', data.id);
         return true;
     } catch (error) {
         console.error('Email send failed:', error.message);
