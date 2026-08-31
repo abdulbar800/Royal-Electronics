@@ -11,9 +11,8 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// Lockout settings
 const MAX_FAILED_ATTEMPTS = 10;
-const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const LOCK_DURATION_MS = 15 * 60 * 1000;
 
 const registerUser = async (req, res) => {
     try {
@@ -59,7 +58,6 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // Account Lockout Check
         if (user.lockUntil && user.lockUntil > Date.now()) {
             const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
             return res.status(423).json({
@@ -67,7 +65,6 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Lock expire ho gaya hai toh reset
         if (user.lockUntil && user.lockUntil <= Date.now()) {
             user.failedLoginAttempts = 0;
             user.lockUntil = null;
@@ -91,11 +88,9 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // Successful login - reset counters
         user.failedLoginAttempts = 0;
         user.lockUntil = null;
 
-        // 2FA Check
         if (user.isTwoFactorEnabled) {
             await user.save();
             return res.json({
@@ -136,13 +131,12 @@ const getUsers = async (req, res) => {
 };
 
 // ============================================
-// SEND RESET OTP - Ye function OTP bhejega
+// SEND RESET OTP
 // ============================================
 const sendResetOTP = async (req, res) => {
     try {
         const { email } = req.body;
 
-        // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ 
@@ -151,18 +145,16 @@ const sendResetOTP = async (req, res) => {
             });
         }
 
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Save OTP to user
         user.resetOTP = otp;
-        user.resetOTPExpires = Date.now() + 600000; // 10 minutes
+        user.resetOTPExpires = Date.now() + 600000;
         user.resetOTPAttempts = 0;
         await user.save();
 
-        console.log(`📧 OTP generated for ${email}: ${otp}`); // Debug log
+        console.log(`📧 OTP generated for ${email}: ${otp}`);
 
-        // Send OTP email using Brevo
+        // ✅ BREVO API CALL - Email send karo
         const emailSent = await sendOTPEmail(email, otp);
 
         if (!emailSent) {
@@ -186,16 +178,14 @@ const sendResetOTP = async (req, res) => {
 };
 
 // ============================================
-// VERIFY RESET OTP - Ye function OTP verify karega
+// VERIFY RESET OTP
 // ============================================
 const verifyResetOTP = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
 
-        // Find user
         const user = await User.findOne({ email });
 
-        // Check if OTP exists and not expired
         if (!user || !user.resetOTP || !user.resetOTPExpires) {
             return res.status(400).json({
                 success: false,
@@ -203,7 +193,6 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
-        // Check if OTP expired
         if (user.resetOTPExpires < Date.now()) {
             user.resetOTP = null;
             user.resetOTPExpires = null;
@@ -215,11 +204,9 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
-        // Check if OTP matches
         if (user.resetOTP !== otp) {
             user.resetOTPAttempts = (user.resetOTPAttempts || 0) + 1;
 
-            // Max 5 attempts
             if (user.resetOTPAttempts >= 5) {
                 user.resetOTP = null;
                 user.resetOTPExpires = null;
@@ -238,7 +225,6 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
-        // OTP verified - Reset password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
         user.resetOTP = null;
@@ -253,7 +239,7 @@ const verifyResetOTP = async (req, res) => {
             message: 'Password reset successfully'
         });
     } catch (error) {
-        console.error('Verify OTP error:', error);
+        console.error('❌ Verify OTP error:', error);
         res.status(500).json({ 
             success: false, 
             message: error.message 
