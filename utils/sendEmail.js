@@ -1,47 +1,35 @@
-const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
+const brevo = require('@getbrevo/brevo');
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const SENDER_EMAIL = process.env.SENDER_EMAIL;
 
 console.log('=================================');
-console.log('EMAIL CONFIGURATION (MailerSend)');
+console.log('EMAIL CONFIGURATION (Brevo)');
 console.log('=================================');
-console.log('MAILERSEND_API_KEY:', MAILERSEND_API_KEY ? 'SET' : 'MISSING');
+console.log('BREVO_API_KEY:', BREVO_API_KEY ? 'SET' : 'MISSING');
 console.log('SENDER_EMAIL:', SENDER_EMAIL ? 'SET' : 'MISSING');
 console.log('=================================');
 
-if (!MAILERSEND_API_KEY || !SENDER_EMAIL) {
-    console.error('MAILERSEND_API_KEY ya SENDER_EMAIL .env me missing hai');
-    console.error('Please add MAILERSEND_API_KEY aur SENDER_EMAIL to .env file');
+if (!BREVO_API_KEY || !SENDER_EMAIL) {
+    console.error('BREVO_API_KEY ya SENDER_EMAIL .env me missing hai');
 }
 
-// SDK use nahi kiya, seedha MailerSend ka REST API call kiya hai fetch se,
-// taaki kisi bhi SDK version mismatch ka jhanjhat na ho
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
+
 const sendEmail = async (to, subject, html) => {
     try {
-        const response = await fetch('https://api.mailersend.com/v1/email', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${MAILERSEND_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                from: { email: SENDER_EMAIL, name: 'Royal Electronics' },
-                to: [{ email: to }],
-                subject: subject,
-                html: html
-            })
-        });
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
+        sendSmtpEmail.subject = subject;
+        sendSmtpEmail.htmlContent = html;
+        sendSmtpEmail.sender = { name: 'Royal Electronics', email: SENDER_EMAIL };
+        sendSmtpEmail.to = [{ email: to }];
 
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            console.error('Email send failed:', JSON.stringify(data));
-            return false;
-        }
-
-        const messageId = response.headers.get('x-message-id');
-        console.log('Email sent:', messageId || 'success');
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log('Email sent:', data.body ? data.body.messageId : data.messageId);
         return true;
     } catch (error) {
-        console.error('Email send failed:', error.message);
+        console.error('Email send failed:', error.response ? JSON.stringify(error.response.body) : error.message);
         return false;
     }
 };
