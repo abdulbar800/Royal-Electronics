@@ -14,6 +14,9 @@ const generateToken = (id) => {
 const MAX_FAILED_ATTEMPTS = 10;
 const LOCK_DURATION_MS = 15 * 60 * 1000;
 
+// ============================================
+// REGISTER - OTP bhi bhejega
+// ============================================
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -33,6 +36,22 @@ const registerUser = async (req, res) => {
             isEmailVerified: false
         });
 
+        // ✅ Generate OTP for email verification
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetOTP = otp;
+        user.resetOTPExpires = Date.now() + 600000; // 10 minutes
+        user.resetOTPAttempts = 0;
+        await user.save();
+
+        console.log(`📧 Registration OTP for ${email}: ${otp}`);
+
+        // ✅ Send OTP email
+        const emailSent = await sendOTPEmail(email, otp);
+
+        if (!emailSent) {
+            console.log('⚠️ OTP generated but email failed');
+        }
+
         if (user) {
             res.status(201).json({
                 _id: user._id,
@@ -40,7 +59,8 @@ const registerUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 isEmailVerified: user.isEmailVerified,
-                token: generateToken(user._id)
+                token: generateToken(user._id),
+                message: 'Registration successful! Please verify your email with OTP.'
             });
         }
     } catch (error) {
@@ -131,7 +151,7 @@ const getUsers = async (req, res) => {
 };
 
 // ============================================
-// SEND RESET OTP
+// SEND RESET OTP (Forgot Password)
 // ============================================
 const sendResetOTP = async (req, res) => {
     try {
@@ -152,9 +172,8 @@ const sendResetOTP = async (req, res) => {
         user.resetOTPAttempts = 0;
         await user.save();
 
-        console.log(`📧 OTP generated for ${email}: ${otp}`);
+        console.log(`📧 Forgot Password OTP for ${email}: ${otp}`);
 
-        // ✅ BREVO API CALL - Email send karo
         const emailSent = await sendOTPEmail(email, otp);
 
         if (!emailSent) {
@@ -232,6 +251,13 @@ const verifyResetOTP = async (req, res) => {
         user.resetOTPAttempts = 0;
         user.failedLoginAttempts = 0; 
         user.lockUntil = null;
+        
+        // ✅ Agar email verify nahi hai toh verify kar do
+        if (!user.isEmailVerified) {
+            user.isEmailVerified = true;
+            user.emailVerifiedAt = Date.now();
+        }
+        
         await user.save();
 
         res.json({
