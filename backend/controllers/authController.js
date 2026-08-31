@@ -5,13 +5,13 @@ const { sendOTPEmail } = require('../utils/sendEmail');
 
 const generateToken = (id) => {
     if (!process.env.JWT_SECRET) {
-        console.error(' JWT_SECRET is not defined!');
+        console.error('❌ JWT_SECRET is not defined!');
         throw new Error('JWT_SECRET is not defined');
     }
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-//  NAYA: Lockout settings
+// Lockout settings
 const MAX_FAILED_ATTEMPTS = 10;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -45,7 +45,7 @@ const registerUser = async (req, res) => {
             });
         }
     } catch (error) {
-        console.error(' Register error:', error);
+        console.error('❌ Register error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -59,20 +59,15 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // ============================================
-        //  NAYA: ACCOUNT LOCKOUT CHECK
-        // IP se independent - agar ye account already lock hai
-        // (distributed brute-force ki wajah se), password sahi ho
-        // ya galat, login yahin reject ho jayega.
-        // ============================================
+        // Account Lockout Check
         if (user.lockUntil && user.lockUntil > Date.now()) {
             const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
             return res.status(423).json({
-                message: `Too many failed login attempts. Account temporarily locked. Try again in ${minutesLeft} minute(s).`
+                message: `Too many failed login attempts. Account locked. Try again in ${minutesLeft} minute(s).`
             });
         }
 
-        // Agar lock expire ho chuka hai, reset kar do
+        // Lock expire ho gaya hai toh reset
         if (user.lockUntil && user.lockUntil <= Date.now()) {
             user.failedLoginAttempts = 0;
             user.lockUntil = null;
@@ -81,7 +76,6 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            //  Galat password - attempt counter badhao
             user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
 
             if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
@@ -97,25 +91,23 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        //  Sahi password - counter reset karo
+        // Successful login - reset counters
         user.failedLoginAttempts = 0;
         user.lockUntil = null;
 
-        // ============================================
-        // 2FA CHECK
-        // ============================================
+        // 2FA Check
         if (user.isTwoFactorEnabled) {
             await user.save();
             return res.json({
                 success: true,
                 requires2FA: true,
                 userId: user._id,
-                message: 'Password correct. Please enter your 2FA code to complete login.'
+                message: 'Password correct. Please enter your 2FA code.'
             });
         }
 
         user.lastLogin = Date.now();
-        user.loginCount += 1;
+        user.loginCount = (user.loginCount || 0) + 1;
         await user.save();
 
         const token = generateToken(user._id);
@@ -129,7 +121,7 @@ const loginUser = async (req, res) => {
             token: token
         });
     } catch (error) {
-        console.error(' LOGIN ERROR:', error);
+        console.error('❌ Login error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -143,21 +135,34 @@ const getUsers = async (req, res) => {
     }
 };
 
+// ============================================
+// SEND RESET OTP - Ye function OTP bhejega
+// ============================================
 const sendResetOTP = async (req, res) => {
     try {
         const { email } = req.body;
 
+        // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
         }
 
+        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Save OTP to user
         user.resetOTP = otp;
-        user.resetOTPExpires = Date.now() + 600000;
+        user.resetOTPExpires = Date.now() + 600000; // 10 minutes
         user.resetOTPAttempts = 0;
         await user.save();
 
+        console.log(`📧 OTP generated for ${email}: ${otp}`); // Debug log
+
+        // Send OTP email using Brevo
         const emailSent = await sendOTPEmail(email, otp);
 
         if (!emailSent) {
@@ -172,17 +177,25 @@ const sendResetOTP = async (req, res) => {
             message: 'OTP sent successfully to your email'
         });
     } catch (error) {
-        console.error('Send OTP error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('❌ Send OTP error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
     }
 };
 
+// ============================================
+// VERIFY RESET OTP - Ye function OTP verify karega
+// ============================================
 const verifyResetOTP = async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
 
+        // Find user
         const user = await User.findOne({ email });
 
+        // Check if OTP exists and not expired
         if (!user || !user.resetOTP || !user.resetOTPExpires) {
             return res.status(400).json({
                 success: false,
@@ -190,6 +203,7 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
+        // Check if OTP expired
         if (user.resetOTPExpires < Date.now()) {
             user.resetOTP = null;
             user.resetOTPExpires = null;
@@ -201,9 +215,11 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
+        // Check if OTP matches
         if (user.resetOTP !== otp) {
             user.resetOTPAttempts = (user.resetOTPAttempts || 0) + 1;
 
+            // Max 5 attempts
             if (user.resetOTPAttempts >= 5) {
                 user.resetOTP = null;
                 user.resetOTPExpires = null;
@@ -222,13 +238,13 @@ const verifyResetOTP = async (req, res) => {
             });
         }
 
+        // OTP verified - Reset password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
         user.resetOTP = null;
         user.resetOTPExpires = null;
         user.resetOTPAttempts = 0;
-        // Password reset hote hi login lockout bhi clear kar do (fresh start)
-        user.failedLoginAttempts = 0;
+        user.failedLoginAttempts = 0; 
         user.lockUntil = null;
         await user.save();
 
@@ -237,8 +253,11 @@ const verifyResetOTP = async (req, res) => {
             message: 'Password reset successfully'
         });
     } catch (error) {
-        console.error(' Verify OTP error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Verify OTP error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
     }
 };
 

@@ -1,64 +1,86 @@
-const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
-const SENDER_EMAIL = process.env.SENDER_EMAIL;
+const axios = require('axios');
 
-console.log('=================================');
-console.log('EMAIL CONFIGURATION (MailerSend)');
-console.log('=================================');
-console.log('MAILERSEND_API_KEY:', MAILERSEND_API_KEY ? 'SET' : 'MISSING');
-console.log('SENDER_EMAIL:', SENDER_EMAIL ? 'SET' : 'MISSING');
-console.log('=================================');
-
-if (!MAILERSEND_API_KEY || !SENDER_EMAIL) {
-    console.error('MAILERSEND_API_KEY ya SENDER_EMAIL .env me missing hai');
-    console.error('Please add MAILERSEND_API_KEY aur SENDER_EMAIL to .env file');
-}
-
-// SDK use nahi kiya, seedha MailerSend ka REST API call kiya hai fetch se,
-// taaki kisi bhi SDK version mismatch ka jhanjhat na ho
-const sendEmail = async (to, subject, html) => {
+const sendOTPEmail = async (email, otp) => {
     try {
-        const response = await fetch('https://api.mailersend.com/v1/email', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${MAILERSEND_API_KEY}`,
-                'Content-Type': 'application/json'
+        // Brevo API endpoint
+        const url = 'https://api.brevo.com/v3/smtp/email';
+        
+        // HTML template for OTP
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+                <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <div style="background: #2563eb; padding: 30px 20px; text-align: center;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Royal Electronics</h1>
+                        <p style="color: #e0e7ff; margin: 5px 0 0;">Your Trusted Electronics Store</p>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div style="padding: 30px 20px;">
+                        <h2 style="color: #1e293b; margin-top: 0;">🔐 Password Reset OTP</h2>
+                        <p style="color: #475569; line-height: 1.6;">Hello,</p>
+                        <p style="color: #475569; line-height: 1.6;">We received a request to reset your password. Use the OTP below to complete the process:</p>
+                        
+                        <div style="background: #f1f5f9; padding: 25px; text-align: center; border-radius: 10px; margin: 25px 0; border: 2px dashed #2563eb;">
+                            <span style="font-size: 42px; font-weight: bold; color: #2563eb; letter-spacing: 8px; font-family: monospace;">${otp}</span>
+                        </div>
+                        
+                        <p style="color: #475569; line-height: 1.6;">This OTP is valid for <strong>10 minutes</strong>.</p>
+                        <p style="color: #475569; line-height: 1.6;">If you didn't request this, please ignore this email.</p>
+                        
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+                        
+                        <p style="color: #94a3b8; font-size: 14px; text-align: center; margin: 0;">Need help? Contact support@royalelectronics.com</p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="background: #f8fafc; padding: 15px 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                        <p style="color: #94a3b8; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Royal Electronics. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Prepare email data
+        const emailData = {
+            sender: {
+                email: process.env.SENDER_EMAIL,
+                name: 'Royal Electronics'
             },
-            body: JSON.stringify({
-                from: { email: SENDER_EMAIL, name: 'Royal Electronics' },
-                to: [{ email: to }],
-                subject: subject,
-                html: html
-            })
+            to: [
+                {
+                    email: email,
+                    name: 'Customer'
+                }
+            ],
+            subject: '🔐 Password Reset OTP - Royal Electronics',
+            textContent: `Your OTP for password reset is: ${otp}\n\nThis OTP is valid for 10 minutes.`,
+            htmlContent: htmlContent
+        };
+
+        const response = await axios.post(url, emailData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'api-key': process.env.BREVO_API_KEY
+            }
         });
 
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            console.error('Email send failed:', JSON.stringify(data));
-            return false;
-        }
-
-        const messageId = response.headers.get('x-message-id');
-        console.log('Email sent:', messageId || 'success');
+        console.log('✅ OTP email sent successfully to:', email);
         return true;
+
     } catch (error) {
-        console.error('Email send failed:', error.message);
+        console.error('OTP email sending failed:', error.response?.data?.message || error.message);
         return false;
     }
 };
 
-const sendOTPEmail = async (to, otp) => {
-    const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 8px;">
-            <h2 style="color: #e63950;">Royal Electronics</h2>
-            <p>Aapne password reset request kiya hai. Neeche diya gaya OTP use karein:</p>
-            <div style="font-size: 28px; font-weight: bold; letter-spacing: 6px; background: #f5f5f5; padding: 16px; text-align: center; border-radius: 6px; margin: 16px 0;">
-                ${otp}
-            </div>
-            <p>Ye OTP <strong>10 minutes</strong> ke liye valid hai.</p>
-            <p style="color: #888; font-size: 13px;">Agar aapne ye request nahi ki, to is email ko ignore karein.</p>
-        </div>
-    `;
-    return sendEmail(to, 'Password Reset OTP - Royal Electronics', html);
+module.exports = {
+    sendOTPEmail
 };
-
-module.exports = { sendEmail, sendOTPEmail };
