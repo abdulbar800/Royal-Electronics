@@ -38,22 +38,13 @@ const Register = () => {
       const data = await apiPost('/auth/register', formData);
       setUserId(data._id);
       setMessage('Registration successful! Please verify your email.');
-      await sendOTP(data.email);
+      setTimer(60);
+      setCanResend(false);
       setStep(2);
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendOTP = async (email) => {
-    try {
-      await apiPost('/auth/send-otp', { email });
-      setTimer(60);
-      setCanResend(false);
-    } catch (error) {
-      console.error('OTP send error:', error);
     }
   };
 
