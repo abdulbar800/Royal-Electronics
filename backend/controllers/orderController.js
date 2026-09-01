@@ -1,6 +1,6 @@
-const Order = require('../models/order');
-const Cart = require('../models/cart');
-const Product = require('../models/product');
+const Order = require('../models/Order');
+const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
 const { sendEmail } = require('../utils/sendEmail');
 const Razorpay = require('razorpay');

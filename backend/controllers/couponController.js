@@ -1,5 +1,5 @@
 const Coupon = require('../models/Coupon');
-const Order = require('../models/order');
+const Order = require('../models/Order');
 
 
 // ======================================================
