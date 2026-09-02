@@ -117,6 +117,7 @@ const sendOrderConfirmation = async (req, order) => {
                     </ul>
                     <p><strong>Shipping Address:</strong></p>
                     <p>${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}</p>
+                    <p><strong>Contact Number:</strong> ${order.shippingAddress.phone}</p>
                     <div class="footer">
                         <p>© 2026 Royal Electronics. All rights reserved.</p>
                         <p>Thank you for shopping with us!</p>

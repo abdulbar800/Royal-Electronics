@@ -26,6 +26,7 @@ const Checkout = () => {
     state: '',
     zipCode: '',
     country: 'India',
+    phone: '',
     paymentMethod: 'RAZORPAY'
   });
 
@@ -215,7 +216,8 @@ const Checkout = () => {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
-          country: formData.country
+          country: formData.country,
+          phone: formData.phone
         },
         paymentMethod: formData.paymentMethod,
         taxPrice: 0,
@@ -300,6 +302,21 @@ const Checkout = () => {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="10-digit mobile number"
+                  pattern="[6-9][0-9]{9}"
+                  maxLength="10"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
                   required
                 />
