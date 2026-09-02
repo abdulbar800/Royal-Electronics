@@ -51,7 +51,7 @@ const app = express();
 //  CORS
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://your-frontend.com'] 
+        ? [process.env.CLIENT_URL]
         : 'http://localhost:3000',
     credentials: true,
     optionsSuccessStatus: 200
