@@ -598,6 +598,7 @@ const Dashboard = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -607,13 +608,23 @@ const Dashboard = () => {
               <tbody className="divide-y">
                 {recentOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">No orders found</td>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No orders found</td>
                   </tr>
                 ) : (
                   recentOrders.map((order, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-3 text-sm font-mono">#{order._id?.slice(-8)}</td>
                       <td className="px-6 py-3 text-sm">{order.user?.name || 'Unknown'}</td>
+                      <td className="px-6 py-3 text-sm text-gray-600">
+                        {order.shippingAddress ? (
+                          <>
+                            <p>{order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
+                            <p className="text-xs text-primary font-medium mt-1">📞 {order.shippingAddress.phone}</p>
+                          </>
+                        ) : (
+                          <span className="text-gray-400">No address</span>
+                        )}
+                      </td>
                       <td className="px-6 py-3 text-sm font-medium text-primary">₹{order.totalPrice}</td>
                       <td className="px-6 py-3 text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs ${
