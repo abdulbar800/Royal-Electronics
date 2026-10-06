@@ -324,8 +324,7 @@ const Dashboard = () => {
           👥 Users
         </button>
       </div>
-
-      {activeTab === 'overview' && (
+            {activeTab === 'overview' && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-2xl shadow p-6">
@@ -586,6 +585,7 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* ============ ORDERS TAB - YAHAN CHANGES KIYE HAIN ============ */}
       {activeTab === 'orders' && (
         <div className="bg-white rounded-2xl shadow overflow-hidden">
           <div className="px-6 py-4 border-b">
@@ -599,6 +599,8 @@ const Dashboard = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+                  {/* ✅ CHANGE 1: NAYA COLUMN HEADER */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -608,7 +610,8 @@ const Dashboard = () => {
               <tbody className="divide-y">
                 {recentOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No orders found</td>
+                    {/* ✅ CHANGE 2: colSpan 7 se 8 kiya */}
+                    <td colSpan="8" className="px-6 py-8 text-center text-gray-500">No orders found</td>
                   </tr>
                 ) : (
                   recentOrders.map((order, index) => (
@@ -623,6 +626,23 @@ const Dashboard = () => {
                           </>
                         ) : (
                           <span className="text-gray-400">No address</span>
+                        )}
+                      </td>
+                      {/* ✅ CHANGE 3: NAYA COLUMN - Product Name aur Quantity */}
+                      <td className="px-6 py-3 text-sm">
+                        {order.orderItems && order.orderItems.length > 0 ? (
+                          <div className="space-y-1">
+                            {order.orderItems.map((item, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="font-medium text-gray-800">{item.name}</span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                  ×{item.quantity}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">No items</span>
                         )}
                       </td>
                       <td className="px-6 py-3 text-sm font-medium text-primary">₹{order.totalPrice}</td>
@@ -711,7 +731,7 @@ const Dashboard = () => {
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded-full text-xs ${coupon.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {coupon.isActive ? 'Active' : 'Inactive'}
-          </span>
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <div className="flex items-center gap-2">

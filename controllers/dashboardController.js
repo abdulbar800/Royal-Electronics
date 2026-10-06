@@ -32,23 +32,23 @@ const getStats = async (req, res) => {
             totalStock,
             productStockList
         ] = await Promise.all([
-            // Total orders - Cancelled ko exclude karo
+            // Total orders 
             Order.countDocuments({ orderStatus: { $ne: 'Cancelled' } }),
             // Total users
             User.countDocuments(),
             // Total products
             Product.countDocuments(),
-            // Total revenue - Cancelled ko exclude karo
+            // Total revenue 
             Order.aggregate([
                 { $match: { isPaid: true, orderStatus: { $ne: 'Cancelled' } } },
                 { $group: { _id: null, total: { $sum: '$totalPrice' } } }
             ]),
-            // Today's orders - Cancelled ko exclude karo
+            // Today's orders 
             Order.countDocuments({ 
                 createdAt: { $gte: startOfToday },
                 orderStatus: { $ne: 'Cancelled' }
             }),
-            // Today's revenue - Cancelled ko exclude karo
+            // Today's revenue 
             Order.aggregate([
                 { 
                     $match: { 
@@ -59,12 +59,12 @@ const getStats = async (req, res) => {
                 },
                 { $group: { _id: null, total: { $sum: '$totalPrice' } } }
             ]),
-            // Month orders - Cancelled ko exclude karo
+            // Month orders 
             Order.countDocuments({ 
                 createdAt: { $gte: startOfMonth },
                 orderStatus: { $ne: 'Cancelled' }
             }),
-            // Month revenue - Cancelled ko exclude karo
+            // Month revenue 
             Order.aggregate([
                 { 
                     $match: { 
@@ -75,7 +75,7 @@ const getStats = async (req, res) => {
                 },
                 { $group: { _id: null, total: { $sum: '$totalPrice' } } }
             ]),
-            // Previous month revenue - Cancelled ko exclude karo
+            // Previous month revenue 
             Order.aggregate([
                 { 
                     $match: { 
@@ -97,7 +97,7 @@ const getStats = async (req, res) => {
                 .populate('user', 'name email')
                 .sort({ createdAt: -1 })
                 .limit(10),
-            // Top selling products - Cancelled ko exclude karo
+            // Top selling products 
             Order.aggregate([
                 { $match: { isPaid: true, orderStatus: { $ne: 'Cancelled' } } },
                 { $unwind: '$orderItems' },
@@ -287,6 +287,7 @@ const getRecentOrders = async (req, res) => {
     try {
         const orders = await Order.find({ orderStatus: { $ne: 'Cancelled' } })
             .populate('user', 'name email')
+            .populate('orderItems.product', 'name price image')
             .sort({ createdAt: -1 })
             .limit(10);
 

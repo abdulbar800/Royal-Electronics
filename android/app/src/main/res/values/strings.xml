@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Royal Electronics</string>
+    <string name="title_activity_main">Royal Electronics</string>
+    <string name="package_name">com.royalelectronics.app</string>
+    <string name="custom_url_scheme">com.royalelectronics.app</string>
+</resources>
