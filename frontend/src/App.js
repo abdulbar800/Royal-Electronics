@@ -21,14 +21,11 @@ import VerifyEmail from './pages/VerifyEmail';
 import TwoFactor from './pages/TwoFactor';
 import Notifications from './pages/Notifications';
 
-
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-
   return null;
 };
 
@@ -36,13 +33,11 @@ function App() {
   return (
     <Router>
       <ScrollToTop /> 
-      
       <CartProvider>
         <div className="min-h-screen flex flex-col bg-gray-50">
           <Navbar />
           <main className="flex-grow">
             <Routes>
-              {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
               <Route path="/product/:id" element={<ProductDetail />} />
@@ -50,8 +45,6 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:email" element={<ResetPassword />} />
-
-              {/* Protected Routes */}
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
@@ -60,8 +53,6 @@ function App() {
               <Route path="/verify-email" element={<ProtectedRoute><VerifyEmail /></ProtectedRoute>} />
               <Route path="/two-factor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-
-              {/* Dashboard admin-only guard  */}
               <Route path="/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
             </Routes>
           </main>

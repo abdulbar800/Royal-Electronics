@@ -15,27 +15,27 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState('');
 
-  // ✅ 1. Product pe click karte hi scroll position save karo
-  const handleProductClick = () => {
-    sessionStorage.setItem('products_scroll_pos', window.scrollY.toString());
+  
+  const handleProductClick = (productId) => {
+    sessionStorage.setItem('last_clicked_product', productId);
   };
 
-  // ✅ 2. Back/Forward button dabane par scroll restore karo
+  
   useLayoutEffect(() => {
-    const handlePopState = () => {
-      const savedPos = sessionStorage.getItem('products_scroll_pos');
-      if (savedPos) {
-        // Images load hone ka thoda wait karo (500ms), phir scroll set karo
-        setTimeout(() => {
-          window.scrollTo({ top: parseInt(savedPos), behavior: 'instant' });
-          sessionStorage.removeItem('products_scroll_pos');
-        }, 500);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+    const savedProductId = sessionStorage.getItem('last_clicked_product');
+    
+    if (savedProductId) {
+      
+      setTimeout(() => {
+        const element = document.getElementById(`product-${savedProductId}`);
+        if (element) {
+          
+          element.scrollIntoView({ behavior: 'instant', block: 'center' });
+        }
+        sessionStorage.removeItem('last_clicked_product');
+      }, 600);
+    }
+  }, [filtered]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -228,10 +228,12 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filtered.map((p) => (
+              // ✅ 3. Yahan ID add karo (id="product-xxxx")
               <Link 
                 key={p._id} 
                 to={`/product/${p._id}`} 
-                onClick={handleProductClick}
+                onClick={() => handleProductClick(p._id)}
+                id={`product-${p._id}`} 
                 className="card card-hover group"
               >
                 <div className="relative overflow-hidden">
@@ -275,4 +277,5 @@ const Products = () => {
     </div>
   );
 };
+
 export default Products;
