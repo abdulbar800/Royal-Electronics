@@ -26,12 +26,12 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Agar page back ya forward button se load hua hai, toh scroll mat karo
+    
     if (window.history.state && window.history.state.idx > 0) {
       return;
     }
     
-    // Agar naya page khula hai, toh top pe jao
+    
     window.scrollTo(0, 0);
   }, [pathname]);
 
@@ -41,7 +41,7 @@ const ScrollToTop = () => {
 function App() {
   return (
     <Router>
-      {/* ✅ Component ko Router ke andar sabse upar call kiya */}
+      
       <ScrollToTop /> 
       
       <CartProvider>
@@ -68,7 +68,7 @@ function App() {
               <Route path="/two-factor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-              {/* Dashboard ab admin-only guard ke sath */}
+              {/* Dashboard admin-only guard  */}
               <Route path="/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
             </Routes>
           </main>

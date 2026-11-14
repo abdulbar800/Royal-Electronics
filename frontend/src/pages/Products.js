@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaSearch, FaFilter, FaTimes, FaShoppingCart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { apiGet } from '../utils/api';
@@ -14,6 +14,22 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState('');
+
+  // ✅ SCROLL FIX 1: Product click hone par position save karo
+  const handleProductClick = () => {
+    sessionStorage.setItem('products_scroll_pos', window.scrollY);
+  };
+
+  // ✅ SCROLL FIX 2: Wapas aane par position restore karo
+  useEffect(() => {
+    const savedPos = sessionStorage.getItem('products_scroll_pos');
+    if (savedPos) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPos));
+        sessionStorage.removeItem('products_scroll_pos');
+      }, 100);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -206,7 +222,13 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filtered.map((p) => (
-              <Link key={p._id} to={`/product/${p._id}`} className="card card-hover group">
+              // ✅ SCROLL FIX 3: onClick={handleProductClick} add kiya
+              <Link 
+                key={p._id} 
+                to={`/product/${p._id}`} 
+                onClick={handleProductClick}
+                className="card card-hover group"
+              >
                 <div className="relative overflow-hidden">
                   <img
                     src={p.images?.[0] || 'https://via.placeholder.com/400x300?text=Royal+Electronics'}
