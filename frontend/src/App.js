@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -21,9 +21,22 @@ import VerifyEmail from './pages/VerifyEmail';
 import TwoFactor from './pages/TwoFactor';
 import Notifications from './pages/Notifications';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      {/* ✅ Component ko Router ke andar sabse upar call kiya */}
+      <ScrollToTop /> 
+      
       <CartProvider>
         <div className="min-h-screen flex flex-col bg-gray-50">
           <Navbar />
@@ -38,7 +51,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password/:email" element={<ResetPassword />} />
 
-              {/*  */}
+              {/* Protected Routes */}
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
               <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
@@ -48,7 +61,7 @@ function App() {
               <Route path="/two-factor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-              {/* Dashboard ab admin-only guard ke sath */}
+              {/* Dashboard ab admin-only guard */}
               <Route path="/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
             </Routes>
           </main>
