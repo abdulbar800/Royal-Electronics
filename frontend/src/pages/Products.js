@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaSearch, FaFilter, FaTimes, FaShoppingCart, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { apiGet } from '../utils/api';
@@ -15,21 +15,27 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState('');
 
-  // ✅ SCROLL FIX 1: Product click hone par position save karo
+  // ✅ 1. Product pe click karte hi scroll position save karo
   const handleProductClick = () => {
-    sessionStorage.setItem('products_scroll_pos', window.scrollY);
+    sessionStorage.setItem('products_scroll_pos', window.scrollY.toString());
   };
 
-  // ✅ SCROLL FIX 2: Wapas aane par position restore karo
+  // ✅ 2. Products page wapas khulte hi scroll restore karo
   useEffect(() => {
     const savedPos = sessionStorage.getItem('products_scroll_pos');
+    
     if (savedPos) {
+      // 300ms ka delay taaki products aur images render ho jayein, phir scroll karo
       setTimeout(() => {
-        window.scrollTo(0, parseInt(savedPos));
+        window.scrollTo({
+          top: parseInt(savedPos),
+          behavior: 'instant' // Turant wahan le jao
+        });
+        // Scroll restore hone ke baad delete kar do
         sessionStorage.removeItem('products_scroll_pos');
-      }, 100);
+      }, 300);
     }
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -222,7 +228,6 @@ const Products = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filtered.map((p) => (
-              // ✅ SCROLL FIX 3: onClick={handleProductClick} add kiya
               <Link 
                 key={p._id} 
                 to={`/product/${p._id}`} 

@@ -21,17 +21,11 @@ import VerifyEmail from './pages/VerifyEmail';
 import TwoFactor from './pages/TwoFactor';
 import Notifications from './pages/Notifications';
 
-// ✅ SMART SCROLL COMPONENT
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    
-    if (window.history.state && window.history.state.idx > 0) {
-      return;
-    }
-    
-    
     window.scrollTo(0, 0);
   }, [pathname]);
 
@@ -41,7 +35,6 @@ const ScrollToTop = () => {
 function App() {
   return (
     <Router>
-      
       <ScrollToTop /> 
       
       <CartProvider>
