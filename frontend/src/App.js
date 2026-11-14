@@ -21,10 +21,17 @@ import VerifyEmail from './pages/VerifyEmail';
 import TwoFactor from './pages/TwoFactor';
 import Notifications from './pages/Notifications';
 
+// ✅ SMART SCROLL COMPONENT
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-  
+
   useEffect(() => {
+    // Agar page back ya forward button se load hua hai, toh scroll mat karo
+    if (window.history.state && window.history.state.idx > 0) {
+      return;
+    }
+    
+    // Agar naya page khula hai, toh top pe jao
     window.scrollTo(0, 0);
   }, [pathname]);
 
@@ -61,7 +68,7 @@ function App() {
               <Route path="/two-factor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
-              {/* Dashboard ab admin-only guard */}
+              {/* Dashboard ab admin-only guard ke sath */}
               <Route path="/dashboard" element={<ProtectedRoute adminOnly><Dashboard /></ProtectedRoute>} />
             </Routes>
           </main>
