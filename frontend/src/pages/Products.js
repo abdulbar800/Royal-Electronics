@@ -15,24 +15,26 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filterType, setFilterType] = useState('');
 
- 
+  // ✅ 1. Product pe click karte hi scroll position save karo
   const handleProductClick = () => {
     sessionStorage.setItem('products_scroll_pos', window.scrollY.toString());
   };
 
- 
+  // ✅ 2. Back/Forward button dabane par scroll restore karo
   useLayoutEffect(() => {
-    const savedPos = sessionStorage.getItem('products_scroll_pos');
-    
-    if (savedPos) {
-      requestAnimationFrame(() => {
-        window.scrollTo({
-          top: parseInt(savedPos),
-          behavior: 'instant'
-        });
-        sessionStorage.removeItem('products_scroll_pos');
-      });
-    }
+    const handlePopState = () => {
+      const savedPos = sessionStorage.getItem('products_scroll_pos');
+      if (savedPos) {
+        // Images load hone ka thoda wait karo (500ms), phir scroll set karo
+        setTimeout(() => {
+          window.scrollTo({ top: parseInt(savedPos), behavior: 'instant' });
+          sessionStorage.removeItem('products_scroll_pos');
+        }, 500);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   useEffect(() => {
@@ -273,5 +275,4 @@ const Products = () => {
     </div>
   );
 };
-
 export default Products;
