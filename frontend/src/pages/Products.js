@@ -33,7 +33,7 @@ const Products = () => {
           element.scrollIntoView({ behavior: 'instant', block: 'center' });
         }
         sessionStorage.removeItem('last_clicked_product');
-      }, 1000);
+      }, 2000);
     }
   }, [filtered]);
 
